@@ -675,21 +675,17 @@
             // FORCE space after ALL punctuation marks (even if there was none)
             formatted = formatted.replace(/([.!?,:;])([a-zA-Z0-9])/g, '$1 $2');
             
-            // Handle words that are stuck together - add space before capital letters
-            // This catches cases like "helloWorld" -> "hello World"
-            formatted = formatted.replace(/([a-z])([A-Z])/g, '$1 $2');
-            
-            // Separate words that might be stuck together by looking for common patterns
-            // Add space between lowercase letter and uppercase letter
-            formatted = formatted.replace(/([a-z])([a-z][a-z]+)/g, (match, p1, p2) => {
-                // Only separate if it looks like two actual words
-                if (p2.length >= 2) {
+            // Handle words that are stuck together by looking for common word boundaries
+            // This is more conservative - only separate obvious cases
+            formatted = formatted.replace(/([a-z]{2,})([a-z]{3,})/g, (match, p1, p2) => {
+                // Only separate if both parts look like real words (3+ letters each)
+                if (p1.length >= 2 && p2.length >= 3) {
                     return p1 + ' ' + p2;
                 }
                 return match;
             });
             
-            // Capitalize first letter after sentence-ending punctuation (. ! ?)
+            // Capitalize ONLY after sentence-ending punctuation (. ! ?) - NOT after commas
             formatted = formatted.replace(/([.!?])\s+([a-z])/g, (match, punct, letter) => {
                 return punct + ' ' + letter.toUpperCase();
             });
@@ -701,6 +697,37 @@
             
             // Capitalize "I" when it appears as a standalone word
             formatted = formatted.replace(/\bi\b/g, 'I');
+            
+            // Capitalize proper nouns (names, places, days, months)
+            const properNouns = [
+                // Common first names
+                'john', 'mary', 'james', 'patricia', 'robert', 'jennifer', 'michael', 'linda', 'william', 'elizabeth',
+                'david', 'barbara', 'richard', 'susan', 'joseph', 'jessica', 'thomas', 'sarah', 'christopher', 'karen',
+                'daniel', 'nancy', 'matthew', 'lisa', 'anthony', 'betty', 'mark', 'helen', 'donald', 'sandra',
+                'steven', 'donna', 'paul', 'carol', 'andrew', 'ruth', 'joshua', 'sharon', 'kenneth', 'michelle',
+                
+                // Days of the week
+                'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+                
+                // Months
+                'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
+                
+                // Common places/countries
+                'america', 'china', 'england', 'france', 'germany', 'japan', 'canada', 'australia', 'india', 'brazil',
+                'london', 'paris', 'tokyo', 'beijing', 'new york', 'los angeles', 'chicago', 'houston', 'philadelphia',
+                'hong kong', 'singapore', 'sydney', 'melbourne', 'toronto', 'vancouver', 'manchester', 'liverpool',
+                
+                // Common titles
+                'mr', 'mrs', 'ms', 'dr', 'professor', 'president', 'director'
+            ];
+            
+            // Capitalize each proper noun
+            properNouns.forEach(noun => {
+                const regex = new RegExp(`\\b${noun}\\b`, 'gi');
+                formatted = formatted.replace(regex, (match) => {
+                    return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
+                });
+            });
             
             // Fix any double spaces that might have been created
             formatted = formatted.replace(/\s+/g, ' ');
