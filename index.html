@@ -283,6 +283,9 @@
             background: #fafafa;
             transition: all 0.2s ease;
             outline: none;
+            min-height: 200px;
+            max-height: none;
+            overflow-y: auto;
         }
 
         .text-output:focus {
@@ -447,14 +450,14 @@
             <div class="controls">
                 <div class="language-dropdown">
                     <button class="language-btn" id="languageBtn">
-                        <span class="flag">🇺🇸</span>
-                        <span class="lang-name">English</span>
+                        <span class="flag">🇬🇧</span>
+                        <span class="lang-name">British English</span>
                         <span>▼</span>
                     </button>
                     <div class="language-options" id="languageOptions">
-                        <div class="language-option active" data-lang="en-US" data-flag="🇺🇸" data-name="English">
-                            <span>🇺🇸</span>
-                            <span>English</span>
+                        <div class="language-option active" data-lang="en-GB" data-flag="🇬🇧" data-name="British English">
+                            <span>🇬🇧</span>
+                            <span>British English</span>
                         </div>
                         <div class="language-option" data-lang="zh-CN" data-flag="🇨🇳" data-name="普通话">
                             <span>🇨🇳</span>
@@ -480,7 +483,7 @@
             <div class="text-controls">
                 <div class="text-size-control">
                     <label for="textSizeSlider" style="font-size: 0.9rem; color: #6b7280;">Text Size:</label>
-                    <input type="range" id="textSizeSlider" class="text-size-slider" min="12" max="32" value="18">
+                    <input type="range" id="textSizeSlider" class="text-size-slider" min="12" max="100" value="18">
                     <span id="textSizeValue" style="font-size: 0.9rem; color: #6b7280; min-width: 30px;">18px</span>
                 </div>
             </div>
@@ -583,25 +586,43 @@
 
         let isListening = false;
         let finalTranscript = '';
-        let currentLanguage = 'en-US';
+        let currentLanguage = 'en-GB';
         let isTraditionalChinese = false;
 
-        // Simplified to Traditional Chinese character mapping (basic common characters)
+        // Simplified to Traditional Chinese character mapping (expanded)
         const simpToTradMap = {
             '国': '國', '语': '語', '说': '說', '话': '話', '问': '問', '号': '號',
-            '叹': '嘆', '换': '換', '行': '行', '逗': '逗', '句': '句', '号': '號',
+            '叹': '嘆', '换': '換', '行': '行', '逗': '逗', '句': '句',
             '开': '開', '关': '關', '引': '引', '双': '雙', '顿': '頓', '括': '括',
             '录': '錄', '音': '音', '文': '文', '本': '本', '字': '字', '体': '體',
-            '繁': '繁', '简': '簡', '复': '複', '制': '製', '下': '下', '载': '載'
+            '繁': '繁', '简': '簡', '复': '複', '制': '製', '下': '下', '载': '載',
+            '发': '發', '现': '現', '时': '時', '间': '間', '为': '為', '书': '書',
+            '学': '學', '会': '會', '过': '過', '来': '來', '这': '這', '里': '裡',
+            '处': '處', '变': '變', '应': '應', '当': '當', '对': '對', '门': '門',
+            '长': '長', '还': '還', '没': '沒', '头': '頭', '么': '麼', '什': '什',
+            '从': '從', '听': '聽', '讲': '講', '请': '請', '谢': '謝', '认': '認'
         };
+
+        // Traditional to Simplified Chinese character mapping (for reverse conversion)
+        const tradToSimpMap = {};
+        for (const [simp, trad] of Object.entries(simpToTradMap)) {
+            tradToSimpMap[trad] = simp;
+        }
 
         // Function to convert simplified to traditional Chinese
         function convertToTraditional(text) {
-            if (!isTraditionalChinese) return text;
-            
             let convertedText = text;
             for (const [simp, trad] of Object.entries(simpToTradMap)) {
                 convertedText = convertedText.replace(new RegExp(simp, 'g'), trad);
+            }
+            return convertedText;
+        }
+
+        // Function to convert traditional to simplified Chinese
+        function convertToSimplified(text) {
+            let convertedText = text;
+            for (const [trad, simp] of Object.entries(tradToSimpMap)) {
+                convertedText = convertedText.replace(new RegExp(trad, 'g'), simp);
             }
             return convertedText;
         }
@@ -811,20 +832,45 @@
             }
         });
 
-        // Download text
+        // Download text with preserved formatting
         downloadBtn.addEventListener('click', () => {
             if (textOutput.value.trim()) {
-                const blob = new Blob([textOutput.value], { type: 'text/plain' });
+                const fontSize = textOutput.style.fontSize || '18px';
+                const textContent = textOutput.value;
+                
+                // Create HTML content with preserved font size
+                const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Voice Writing Output</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: ${fontSize};
+            line-height: 1.6;
+            margin: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Voice Writing Output</h1>
+    <div style="white-space: pre-wrap;">${textContent}</div>
+</body>
+</html>`;
+                
+                const blob = new Blob([htmlContent], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'voice-to-text.txt';
+                a.download = 'voice-writing.html';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                status.textContent = '💾 Text file downloaded!';
+                status.textContent = '💾 Text file downloaded with formatting!';
                 status.className = 'status success';
             } else {
                 status.textContent = '❌ No text to download.';
@@ -832,9 +878,13 @@
             }
         });
 
-        // Allow manual editing
+        // Allow manual editing and auto-resize
         textOutput.addEventListener('input', () => {
             finalTranscript = textOutput.value;
+            
+            // Auto-resize textarea
+            textOutput.style.height = 'auto';
+            textOutput.style.height = Math.max(200, textOutput.scrollHeight) + 'px';
         });
 
         // Toggle instructions
@@ -847,31 +897,39 @@
             }
         });
 
-        // Chinese toggle functionality
+        // Improved Chinese toggle functionality
         chineseToggle.addEventListener('click', () => {
             isTraditionalChinese = !isTraditionalChinese;
+            
             if (isTraditionalChinese) {
                 chineseToggle.textContent = '繁體';
             } else {
                 chineseToggle.textContent = '简体';
             }
             
-            // Re-convert existing text
+            // Convert existing text based on toggle state
             if (textOutput.value.trim()) {
                 const currentText = textOutput.value;
                 if (isTraditionalChinese) {
                     textOutput.value = convertToTraditional(currentText);
                 } else {
-                    // For simplicity, we'll just update the toggle text
-                    // A full traditional to simplified conversion would need a larger mapping
-                    textOutput.value = currentText;
+                    textOutput.value = convertToSimplified(currentText);
                 }
                 finalTranscript = textOutput.value;
+                
+                // Auto-resize after conversion
+                textOutput.style.height = 'auto';
+                textOutput.style.height = Math.max(200, textOutput.scrollHeight) + 'px';
             }
             
             status.textContent = isTraditionalChinese ? 'Switched to Traditional Chinese 繁體' : 'Switched to Simplified Chinese 简体';
             status.className = 'status success';
         });
+
+        // Initialize auto-resize
+        window.addEventListener('load', () => {
+            textOutput.style.height = Math.max(200, textOutput.scrollHeight) + 'px';
+        });
     </script>
 </body>
-</html> 
+</html>
