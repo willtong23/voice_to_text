@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice to Text</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #1f2937;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            overflow: hidden;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .language-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .language-options.show {
+            display: block;
+        }
+
+        .language-option {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #374151;
+            transition: background 0.2s ease;
+        }
+
+        .language-option:hover {
+            background: #f3f4f6;
+        }
+
+        .language-option.active {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .voice-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .voice-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .voice-button.listening {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1rem;
+        }
+
+        .status {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .status.listening {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        .status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        .text-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+
+        .text-size-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .text-size-slider {
+            width: 120px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .text-size-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+        }
+
+        .text-size-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            border: none;
+        }
+
+        .text-output {
+            flex: 1;
+            padding: 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 18px;
+            line-height: 1.6;
+            resize: none;
+            font-family: inherit;
+            background: #fafafa;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .text-output:focus {
+            border-color: #4f46e5;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+
+        .instructions-toggle {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            color: #374151;
+            border-color: #9ca3af;
+        }
+
+        .instructions-content {
+            display: none;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .instructions-content.show {
+            display: block;
+        }
+
+        .punctuation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .punct-section {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .punct-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .punct-list {
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: #4b5563;
+        }
+
+        .browser-support {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+                padding: 1rem;
+            }
+            
+            .header-left {
+                justify-content: center;
+            }
+            
+            .controls {
+                justify-content: space-between;
+            }
+            
+            .text-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .container {
+                height: calc(100vh - 20px);
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <!-- Replace the src below with your logo image path -->
+                    <!-- <img src="path_to_your_logo.png" alt="Logo"> -->
+                    <!-- For now showing a placeholder icon -->
+                    🎯
+                </div>
+                <h1>🎤 Voice to Text</h1>
+            </div>
+            <div class="controls">
+                <div class="language-dropdown">
+                    <button class="language-btn" id="languageBtn">
+                        <span class="flag">🇺🇸</span>
+                        <span class="lang-name">English</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="language-options" id="languageOptions">
+                        <div class="language-option active" data-lang="en-US" data-flag="🇺🇸" data-name="English">
+                            <span>🇺🇸</span>
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="zh-CN" data-flag="🇨🇳" data-name="普通话">
+                            <span>🇨🇳</span>
+                            <span>普通话 (Mandarin)</span>
+                        </div>
+                        <div class="language-option" data-lang="yue-Hant-HK" data-flag="🇭🇰" data-name="廣東話">
+                            <span>🇭🇰</span>
+                            <span>廣東話 (Cantonese)</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="voiceBtn" class="voice-button">
+                    <span>🎤</span>
+                    <span>Start Recording</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div id="status" class="status">Ready to listen...</div>
+            
+            <div class="text-controls">
+                <div class="text-size-control">
+                    <label for="textSizeSlider" style="font-size: 0.9rem; color: #6b7280;">Text Size:</label>
+                    <input type="range" id="textSizeSlider" class="text-size-slider" min="12" max="32" value="18">
+                    <span id="textSizeValue" style="font-size: 0.9rem; color: #6b7280; min-width: 30px;">18px</span>
+                </div>
+            </div>
+            
+            <textarea id="textOutput" class="text-output" placeholder="Your spoken words will appear here... 您說的話會在這裡顯示..."></textarea>
+            
+            <div class="action-buttons">
+                <button id="clearBtn" class="action-btn">
+                    <span>🗑️</span>
+                    <span>Clear</span>
+                </button>
+                <button id="copyBtn" class="action-btn">
+                    <span>📋</span>
+                    <span>Copy</span>
+                </button>
+                <button id="downloadBtn" class="action-btn">
+                    <span>💾</span>
+                    <span>Download</span>
+                </button>
+            </div>
+
+            <div class="instructions-toggle">
+                <button class="toggle-btn" id="toggleBtn">Show Punctuation Guide</button>
+            </div>
+            
+            <div class="instructions-content" id="instructionsContent">
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">📖 Punctuation Commands</div>
+                
+                <div class="punctuation-grid">
+                    <div class="punct-section">
+                        <div class="punct-title">🇺🇸 English</div>
+                        <div class="punct-list">
+                            • "period" → .<br>
+                            • "comma" → ,<br>
+                            • "question mark" → ?<br>
+                            • "exclamation mark" → !<br>
+                            • "new line" → line break
+                        </div>
+                    </div>
+                    
+                    <div class="punct-section">
+                        <div class="punct-title">🇨🇳 普通话</div>
+                        <div class="punct-list">
+                            • "句号" → 。<br>
+                            • "逗号" → ，<br>
+                            • "问号" → ？<br>
+                            • "感叹号" → ！<br>
+                            • "换行" → line break
+                        </div>
+                    </div>
+                    
+                    <div class="punct-section">
+                        <div class="punct-title">🇭🇰 廣東話</div>
+                        <div class="punct-list">
+                            • "句號" → 。<br>
+                            • "逗號" → ，<br>
+                            • "問號" → ？<br>
+                            • "感嘆號" → ！<br>
+                            • "換行" → line break
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="browserSupport" class="browser-support">
+                <strong>Browser not supported!</strong><br>
+                This feature requires a modern browser like Chrome, Firefox, or Safari with microphone permissions.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if browser supports Speech Recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            document.getElementById('browserSupport').style.display = 'block';
+            document.getElementById('voiceBtn').disabled = true;
+        }
+
+        // Initialize speech recognition
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        // Get elements
+        const voiceBtn = document.getElementById('voiceBtn');
+        const status = document.getElementById('status');
+        const textOutput = document.getElementById('textOutput');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const languageBtn = document.getElementById('languageBtn');
+        const languageOptions = document.getElementById('languageOptions');
+        const textSizeSlider = document.getElementById('textSizeSlider');
+        const textSizeValue = document.getElementById('textSizeValue');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const instructionsContent = document.getElementById('instructionsContent');
+
+        let isListening = false;
+        let finalTranscript = '';
+        let currentLanguage = 'en-US';
+
+        // Punctuation conversion mappings
+        const punctuationMap = {
+            // English punctuation commands
+            ' period': '.', ' full stop': '.', ' comma': ',', ' question mark': '?',
+            ' exclamation mark': '!', ' exclamation point': '!', ' semicolon': ';',
+            ' colon': ':', ' quotation mark': '"', ' quote': '"', ' apostrophe': "'",
+            ' dash': '-', ' hyphen': '-', ' new line': '\n', ' new paragraph': '\n\n',
+            
+            // Cantonese punctuation commands
+            ' 句號': '。', '句號': '。', ' 逗號': '，', '逗號': '，',
+            ' 問號': '？', '問號': '？', ' 感嘆號': '！', '感嘆號': '！',
+            ' 開引號': '「', '開引號': '「', ' 關引號': '」', '關引號': '」',
+            ' 換行': '\n', '換行': '\n',
+            
+            // Putonghua punctuation commands
+            ' 句号': '。', '句号': '。', ' 逗号': '，', '逗号': '，',
+            ' 问号': '？', '问号': '？', ' 感叹号': '！', '感叹号': '！',
+            ' 开引号': '「', '开引号': '「', ' 关引号': '」', '关引号': '」',
+            ' 换行': '\n', '换行': '\n'
+        };
+
+        // Function to convert spoken punctuation to actual punctuation
+        function convertPunctuation(text) {
+            let convertedText = text;
+            const sortedKeys = Object.keys(punctuationMap).sort((a, b) => b.length - a.length);
+            
+            for (const spokenPunc of sortedKeys) {
+                const regex = new RegExp(spokenPunc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                convertedText = convertedText.replace(regex, punctuationMap[spokenPunc]);
+            }
+            
+            convertedText = convertedText.replace(/\s+/g, ' ').trim();
+            return convertedText;
+        }
+
+        // Language dropdown functionality
+        languageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            languageOptions.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            languageOptions.classList.remove('show');
+        });
+
+        // Language selection
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove active from all options
+                document.querySelectorAll('.language-option').forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                
+                // Update button display
+                const flag = option.dataset.flag;
+                const name = option.dataset.name;
+                languageBtn.querySelector('.flag').textContent = flag;
+                languageBtn.querySelector('.lang-name').textContent = name;
+                
+                // Update recognition language
+                currentLanguage = option.dataset.lang;
+                recognition.lang = currentLanguage;
+                
+                status.textContent = `Language changed to: ${name}`;
+                status.className = 'status success';
+                
+                // Close dropdown
+                languageOptions.classList.remove('show');
+                
+                // Restart recognition if listening
+                if (isListening) {
+                    recognition.stop();
+                    setTimeout(() => {
+                        if (isListening) recognition.start();
+                    }, 100);
+                }
+            });
+        });
+
+        // Set initial language
+        recognition.lang = currentLanguage;
+
+        // Text size slider
+        textSizeSlider.addEventListener('input', () => {
+            const size = textSizeSlider.value;
+            textOutput.style.fontSize = `${size}px`;
+            textSizeValue.textContent = `${size}px`;
+        });
+
+        // Voice recording
+        voiceBtn.addEventListener('click', () => {
+            if (!isListening) {
+                recognition.start();
+                isListening = true;
+                voiceBtn.classList.add('listening');
+                voiceBtn.innerHTML = '<span>⏹️</span><span>Stop Recording</span>';
+                
+                const selectedLang = languageBtn.querySelector('.lang-name').textContent;
+                status.textContent = `🎤 Listening in ${selectedLang}... Speak now!`;
+                status.className = 'status listening';
+            } else {
+                recognition.stop();
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<span>🎤</span><span>Start Recording</span>';
+                status.textContent = 'Recording stopped. Click "Start Recording" to continue.';
+                status.className = 'status';
+            }
+        });
+
+        // Handle speech recognition results
+        recognition.addEventListener('result', (event) => {
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                
+                if (event.results[i].isFinal) {
+                    finalTranscript += convertPunctuation(transcript);
+                } else {
+                    interimTranscript += convertPunctuation(transcript);
+                }
+            }
+            
+            let combinedText = (finalTranscript + interimTranscript).replace(/\s+/g, ' ').trim();
+            textOutput.value = combinedText;
+            textOutput.scrollTop = textOutput.scrollHeight;
+            
+            status.textContent = '✅ Got it! Keep speaking...';
+            status.className = 'status success';
+        });
+
+        // Handle errors
+        recognition.addEventListener('error', (event) => {
+            console.error('Speech recognition error:', event.error);
+            let errorMessage = `❌ Error: ${event.error}. Try again.`;
+            
+            if (event.error === 'language-not-supported') {
+                errorMessage = '❌ Selected language not supported. Try another language.';
+            } else if (event.error === 'no-speech') {
+                errorMessage = '❌ No speech detected. Please speak louder.';
+            } else if (event.error === 'not-allowed') {
+                errorMessage = '❌ Microphone access denied. Please allow permissions.';
+            }
+            
+            status.textContent = errorMessage;
+            status.className = 'status error';
+            
+            isListening = false;
+            voiceBtn.classList.remove('listening');
+            voiceBtn.innerHTML = '<span>🎤</span><span>Start Recording</span>';
+        });
+
+        // Handle when recognition ends
+        recognition.addEventListener('end', () => {
+            if (isListening) {
+                status.textContent = '🔄 Restarting... Keep speaking!';
+                setTimeout(() => {
+                    if (isListening) recognition.start();
+                }, 100);
+            }
+        });
+
+        // Clear text
+        clearBtn.addEventListener('click', () => {
+            textOutput.value = '';
+            finalTranscript = '';
+            status.textContent = 'Text cleared. Ready for new input.';
+            status.className = 'status';
+        });
+
+        // Copy text
+        copyBtn.addEventListener('click', async () => {
+            if (textOutput.value.trim()) {
+                try {
+                    await navigator.clipboard.writeText(textOutput.value);
+                    status.textContent = '📋 Text copied to clipboard!';
+                    status.className = 'status success';
+                } catch (err) {
+                    textOutput.select();
+                    document.execCommand('copy');
+                    status.textContent = '📋 Text copied to clipboard!';
+                    status.className = 'status success';
+                }
+            } else {
+                status.textContent = '❌ No text to copy.';
+                status.className = 'status error';
+            }
+        });
+
+        // Download text
+        downloadBtn.addEventListener('click', () => {
+            if (textOutput.value.trim()) {
+                const blob = new Blob([textOutput.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'voice-to-text.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                status.textContent = '💾 Text file downloaded!';
+                status.className = 'status success';
+            } else {
+                status.textContent = '❌ No text to download.';
+                status.className = 'status error';
+            }
+        });
+
+        // Allow manual editing
+        textOutput.addEventListener('input', () => {
+            finalTranscript = textOutput.value;
+        });
+
+        // Toggle instructions
+        toggleBtn.addEventListener('click', () => {
+            instructionsContent.classList.toggle('show');
+            if (instructionsContent.classList.contains('show')) {
+                toggleBtn.textContent = 'Hide Punctuation Guide';
+            } else {
+                toggleBtn.textContent = 'Show Punctuation Guide';
+            }
+        });
+    </script>
+</body>
+</html> 
