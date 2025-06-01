@@ -459,7 +459,7 @@
                             <span>🇬🇧</span>
                             <span>British English</span>
                         </div>
-                        <div class="language-option" data-lang="zh-CN" data-flag="🇨🇳" data-name="普通话">
+                        <div class="language-option" data-lang="zh-Hans-CN" data-flag="🇨🇳" data-name="普通话">
                             <span>🇨🇳</span>
                             <span>普通话 (Mandarin)</span>
                         </div>
@@ -717,14 +717,12 @@
             
             convertedText = convertedText.replace(/\s+/g, ' ').trim();
             
-            // Apply Chinese character conversion based on language
+            // Apply Chinese character conversion only for Cantonese (which uses traditional)
             if (currentLanguage === 'yue-Hant-HK') {
                 // Cantonese uses traditional Chinese
                 convertedText = convertToTraditional(convertedText);
-            } else if (currentLanguage === 'zh-CN') {
-                // Mandarin uses simplified Chinese (no conversion needed as it's default)
-                convertedText = convertToSimplified(convertedText);
             }
+            // Mandarin (zh-Hans-CN) should return simplified Chinese directly from API
             
             return convertedText;
         }
