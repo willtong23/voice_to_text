@@ -463,13 +463,12 @@
                             <span>🇨🇳</span>
                             <span>普通话 (Mandarin)</span>
                         </div>
-                        <div class="language-option" data-lang="yue-Hant-HK" data-flag="🇭🇰" data-name="廣東話">
+                        <div class="language-option" data-lang="yue-Hant-HK" data-flag="🇭🇰" data-name="广东话">
                             <span>🇭🇰</span>
-                            <span>廣東話 (Cantonese)</span>
+                            <span>广东话 (Cantonese)</span>
                         </div>
                     </div>
                 </div>
-                <button class="chinese-toggle" id="chineseToggle">简体</button>
                 <button id="voiceBtn" class="voice-button">
                     <span>🎤</span>
                     <span>Start Recording</span>
@@ -488,7 +487,7 @@
                 </div>
             </div>
             
-            <textarea id="textOutput" class="text-output" placeholder="Your spoken words will appear here... 您說的話會在這裡顯示..."></textarea>
+            <textarea id="textOutput" class="text-output" placeholder="Your spoken words will appear here... 您说的话会在这里显示..."></textarea>
             
             <div class="action-buttons">
                 <button id="clearBtn" class="action-btn">
@@ -536,13 +535,13 @@
                     </div>
                     
                     <div class="punct-section">
-                        <div class="punct-title">🇭🇰 廣東話</div>
+                        <div class="punct-title">🇭🇰 广东话</div>
                         <div class="punct-list">
-                            • "句號" → 。<br>
-                            • "逗號" → ，<br>
-                            • "問號" → ？<br>
-                            • "感嘆號" → ！<br>
-                            • "換行" → line break
+                            • "句号" → 。<br>
+                            • "逗号" → ，<br>
+                            • "问号" → ？<br>
+                            • "感叹号" → ！<br>
+                            • "换行" → line break
                         </div>
                     </div>
                 </div>
@@ -582,12 +581,10 @@
         const textSizeValue = document.getElementById('textSizeValue');
         const toggleBtn = document.getElementById('toggleBtn');
         const instructionsContent = document.getElementById('instructionsContent');
-        const chineseToggle = document.getElementById('chineseToggle');
 
         let isListening = false;
         let finalTranscript = '';
         let currentLanguage = 'en-GB';
-        let isTraditionalChinese = false;
 
         // Simplified to Traditional Chinese character mapping (expanded)
         const simpToTradMap = {
@@ -604,9 +601,29 @@
         };
 
         // Traditional to Simplified Chinese character mapping (for reverse conversion)
-        const tradToSimpMap = {};
+        const tradToSimpMap = {
+            // Common characters that speech recognition might return in traditional
+            '國': '国', '語': '语', '說': '说', '話': '话', '問': '问', '號': '号',
+            '嘆': '叹', '換': '换', '開': '开', '關': '关', '雙': '双', '頓': '顿',
+            '錄': '录', '體': '体', '繁': '繁', '簡': '简', '複': '复', '製': '制',
+            '載': '载', '發': '发', '現': '现', '時': '时', '間': '间', '為': '为',
+            '書': '书', '學': '学', '會': '会', '過': '过', '來': '来', '這': '这',
+            '裡': '里', '處': '处', '變': '变', '應': '应', '當': '当', '對': '对',
+            '門': '门', '長': '长', '還': '还', '沒': '没', '頭': '头', '麼': '么',
+            '從': '从', '聽': '听', '講': '讲', '請': '请', '謝': '谢', '認': '认',
+            // Additional common characters
+            '們': '们', '個': '个', '見': '见', '聲': '声', '機': '机', '電': '电',
+            '車': '车', '網': '网', '點': '点', '線': '线', '種': '种', '樣': '样',
+            '產': '产', '業': '业', '員': '员', '題': '题', '動': '动', '園': '园',
+            '場': '场', '關': '关', '錢': '钱', '買': '买', '賣': '卖', '東': '东',
+            '計': '计', '設': '设', '備': '备', '統': '统', '經': '经', '營': '营'
+        };
+        
+        // Also populate from the existing simpToTradMap
         for (const [simp, trad] of Object.entries(simpToTradMap)) {
-            tradToSimpMap[trad] = simp;
+            if (!tradToSimpMap[trad]) {
+                tradToSimpMap[trad] = simp;
+            }
         }
 
         // Function to convert simplified to traditional Chinese
@@ -620,11 +637,51 @@
 
         // Function to convert traditional to simplified Chinese
         function convertToSimplified(text) {
+            if (!text) return text;
+            
             let convertedText = text;
+            let hasChanges = false;
+            
+            // Convert each traditional character to simplified
             for (const [trad, simp] of Object.entries(tradToSimpMap)) {
-                convertedText = convertedText.replace(new RegExp(trad, 'g'), simp);
+                const regex = new RegExp(trad, 'g');
+                if (convertedText.includes(trad)) {
+                    convertedText = convertedText.replace(regex, simp);
+                    hasChanges = true;
+                }
             }
+            
+            // Log for debugging (remove in production)
+            if (hasChanges && currentLanguage === 'zh-CN') {
+                console.log('Converted to simplified:', text, '→', convertedText);
+            }
+            
             return convertedText;
+        }
+
+        // Function to format English spacing properly
+        function formatEnglishSpacing(text) {
+            if (!text.trim()) return text;
+            
+            // Clean up multiple spaces first
+            let formatted = text.replace(/\s+/g, ' ').trim();
+            
+            // Ensure space after words, but not before punctuation
+            formatted = formatted.replace(/([a-zA-Z0-9])([.!?,:;])/g, '$1$2');
+            formatted = formatted.replace(/([.!?,:;])([a-zA-Z0-9])/g, '$1 $2');
+            
+            // Ensure words have spaces between them
+            formatted = formatted.replace(/([a-zA-Z0-9])([a-zA-Z])/g, '$1 $2');
+            
+            // Fix any double spaces that might have been created
+            formatted = formatted.replace(/\s+/g, ' ');
+            
+            // Add space at the end if the text doesn't end with punctuation
+            if (formatted && !formatted.match(/[.!?,:;]$/)) {
+                formatted += ' ';
+            }
+            
+            return formatted;
         }
 
         // Punctuation conversion mappings
@@ -660,9 +717,13 @@
             
             convertedText = convertedText.replace(/\s+/g, ' ').trim();
             
-            // Apply Chinese character conversion if needed
-            if (currentLanguage.includes('zh') || currentLanguage.includes('yue')) {
+            // Apply Chinese character conversion based on language
+            if (currentLanguage === 'yue-Hant-HK') {
+                // Cantonese uses traditional Chinese
                 convertedText = convertToTraditional(convertedText);
+            } else if (currentLanguage === 'zh-CN') {
+                // Mandarin uses simplified Chinese (no conversion needed as it's default)
+                convertedText = convertToSimplified(convertedText);
             }
             
             return convertedText;
@@ -694,16 +755,6 @@
                 // Update recognition language
                 currentLanguage = option.dataset.lang;
                 recognition.lang = currentLanguage;
-                
-                // Show/hide Chinese toggle
-                if (currentLanguage.includes('zh') || currentLanguage.includes('yue')) {
-                    chineseToggle.classList.add('show');
-                    // Default to simplified for both Mandarin and Cantonese
-                    isTraditionalChinese = false;
-                    chineseToggle.textContent = '简体';
-                } else {
-                    chineseToggle.classList.remove('show');
-                }
                 
                 status.textContent = `Language changed to: ${name}`;
                 status.className = 'status success';
@@ -757,12 +808,20 @@
             let interimTranscript = '';
             
             for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
+                let transcript = event.results[i][0].transcript;
+                
+                // Apply punctuation conversion
+                transcript = convertPunctuation(transcript);
+                
+                // For English, ensure proper spacing
+                if (currentLanguage === 'en-GB') {
+                    transcript = formatEnglishSpacing(transcript);
+                }
                 
                 if (event.results[i].isFinal) {
-                    finalTranscript += convertPunctuation(transcript);
+                    finalTranscript += transcript;
                 } else {
-                    interimTranscript += convertPunctuation(transcript);
+                    interimTranscript += transcript;
                 }
             }
             
@@ -895,35 +954,6 @@
             } else {
                 toggleBtn.textContent = 'Show Punctuation Guide';
             }
-        });
-
-        // Improved Chinese toggle functionality
-        chineseToggle.addEventListener('click', () => {
-            isTraditionalChinese = !isTraditionalChinese;
-            
-            if (isTraditionalChinese) {
-                chineseToggle.textContent = '繁體';
-            } else {
-                chineseToggle.textContent = '简体';
-            }
-            
-            // Convert existing text based on toggle state
-            if (textOutput.value.trim()) {
-                const currentText = textOutput.value;
-                if (isTraditionalChinese) {
-                    textOutput.value = convertToTraditional(currentText);
-                } else {
-                    textOutput.value = convertToSimplified(currentText);
-                }
-                finalTranscript = textOutput.value;
-                
-                // Auto-resize after conversion
-                textOutput.style.height = 'auto';
-                textOutput.style.height = Math.max(200, textOutput.scrollHeight) + 'px';
-            }
-            
-            status.textContent = isTraditionalChinese ? 'Switched to Traditional Chinese 繁體' : 'Switched to Simplified Chinese 简体';
-            status.className = 'status success';
         });
 
         // Initialize auto-resize
