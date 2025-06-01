@@ -99,6 +99,7 @@
             gap: 0.5rem;
             font-weight: 500;
             transition: all 0.2s ease;
+            min-width: 180px;
         }
 
         .language-btn:hover {
@@ -117,6 +118,7 @@
             display: none;
             margin-top: 0.5rem;
             overflow: hidden;
+            min-width: 250px;
         }
 
         .language-options.show {
@@ -131,6 +133,7 @@
             gap: 0.5rem;
             color: #374151;
             transition: background 0.2s ease;
+            white-space: nowrap;
         }
 
         .language-option:hover {
@@ -140,6 +143,26 @@
         .language-option.active {
             background: #eff6ff;
             color: #2563eb;
+        }
+
+        .chinese-toggle {
+            display: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .chinese-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chinese-toggle.show {
+            display: block;
         }
 
         .voice-button {
@@ -382,6 +405,22 @@
             
             .controls {
                 justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .language-dropdown {
+                flex: 1;
+                min-width: 180px;
+            }
+            
+            .chinese-toggle {
+                min-width: 60px;
+            }
+            
+            .voice-button {
+                flex: 1;
+                min-width: 140px;
             }
             
             .text-controls {
@@ -430,6 +469,7 @@
                         </div>
                     </div>
                 </div>
+                <button class="chinese-toggle" id="chineseToggle">简体</button>
                 <button id="voiceBtn" class="voice-button">
                     <span>🎤</span>
                     <span>Start Recording</span>
@@ -542,10 +582,32 @@
         const textSizeValue = document.getElementById('textSizeValue');
         const toggleBtn = document.getElementById('toggleBtn');
         const instructionsContent = document.getElementById('instructionsContent');
+        const chineseToggle = document.getElementById('chineseToggle');
 
         let isListening = false;
         let finalTranscript = '';
         let currentLanguage = 'en-US';
+        let isTraditionalChinese = false;
+
+        // Simplified to Traditional Chinese character mapping (basic common characters)
+        const simpToTradMap = {
+            '国': '國', '语': '語', '说': '說', '话': '話', '问': '問', '号': '號',
+            '叹': '嘆', '换': '換', '行': '行', '逗': '逗', '句': '句', '号': '號',
+            '开': '開', '关': '關', '引': '引', '双': '雙', '顿': '頓', '括': '括',
+            '录': '錄', '音': '音', '文': '文', '本': '本', '字': '字', '体': '體',
+            '繁': '繁', '简': '簡', '复': '複', '制': '製', '下': '下', '载': '載'
+        };
+
+        // Function to convert simplified to traditional Chinese
+        function convertToTraditional(text) {
+            if (!isTraditionalChinese) return text;
+            
+            let convertedText = text;
+            for (const [simp, trad] of Object.entries(simpToTradMap)) {
+                convertedText = convertedText.replace(new RegExp(simp, 'g'), trad);
+            }
+            return convertedText;
+        }
 
         // Punctuation conversion mappings
         const punctuationMap = {
@@ -555,17 +617,17 @@
             ' colon': ':', ' quotation mark': '"', ' quote': '"', ' apostrophe': "'",
             ' dash': '-', ' hyphen': '-', ' new line': '\n', ' new paragraph': '\n\n',
             
-            // Cantonese punctuation commands
-            ' 句號': '。', '句號': '。', ' 逗號': '，', '逗號': '，',
-            ' 問號': '？', '問號': '？', ' 感嘆號': '！', '感嘆號': '！',
-            ' 開引號': '「', '開引號': '「', ' 關引號': '」', '關引號': '」',
-            ' 換行': '\n', '換行': '\n',
-            
-            // Putonghua punctuation commands
+            // Cantonese punctuation commands (default simplified, will be converted if needed)
             ' 句号': '。', '句号': '。', ' 逗号': '，', '逗号': '，',
             ' 问号': '？', '问号': '？', ' 感叹号': '！', '感叹号': '！',
             ' 开引号': '「', '开引号': '「', ' 关引号': '」', '关引号': '」',
-            ' 换行': '\n', '换行': '\n'
+            ' 换行': '\n', '换行': '\n',
+            
+            // Traditional variants
+            ' 句號': '。', '句號': '。', ' 逗號': '，', '逗號': '，',
+            ' 問號': '？', '問號': '？', ' 感嘆號': '！', '感嘆號': '！',
+            ' 開引號': '「', '開引號': '「', ' 關引號': '」', '關引號': '」',
+            ' 換行': '\n', '換行': '\n'
         };
 
         // Function to convert spoken punctuation to actual punctuation
@@ -579,6 +641,12 @@
             }
             
             convertedText = convertedText.replace(/\s+/g, ' ').trim();
+            
+            // Apply Chinese character conversion if needed
+            if (currentLanguage.includes('zh') || currentLanguage.includes('yue')) {
+                convertedText = convertToTraditional(convertedText);
+            }
+            
             return convertedText;
         }
 
@@ -608,6 +676,16 @@
                 // Update recognition language
                 currentLanguage = option.dataset.lang;
                 recognition.lang = currentLanguage;
+                
+                // Show/hide Chinese toggle
+                if (currentLanguage.includes('zh') || currentLanguage.includes('yue')) {
+                    chineseToggle.classList.add('show');
+                    // Default to simplified for both Mandarin and Cantonese
+                    isTraditionalChinese = false;
+                    chineseToggle.textContent = '简体';
+                } else {
+                    chineseToggle.classList.remove('show');
+                }
                 
                 status.textContent = `Language changed to: ${name}`;
                 status.className = 'status success';
@@ -770,6 +848,32 @@
             } else {
                 toggleBtn.textContent = 'Show Punctuation Guide';
             }
+        });
+
+        // Chinese toggle functionality
+        chineseToggle.addEventListener('click', () => {
+            isTraditionalChinese = !isTraditionalChinese;
+            if (isTraditionalChinese) {
+                chineseToggle.textContent = '繁體';
+            } else {
+                chineseToggle.textContent = '简体';
+            }
+            
+            // Re-convert existing text
+            if (textOutput.value.trim()) {
+                const currentText = textOutput.value;
+                if (isTraditionalChinese) {
+                    textOutput.value = convertToTraditional(currentText);
+                } else {
+                    // For simplicity, we'll just update the toggle text
+                    // A full traditional to simplified conversion would need a larger mapping
+                    textOutput.value = currentText;
+                }
+                finalTranscript = textOutput.value;
+            }
+            
+            status.textContent = isTraditionalChinese ? 'Switched to Traditional Chinese 繁體' : 'Switched to Simplified Chinese 简体';
+            status.className = 'status success';
         });
     </script>
 </body>
