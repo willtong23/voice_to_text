@@ -463,9 +463,9 @@
                             <span>🇨🇳</span>
                             <span>普通话 (Mandarin)</span>
                         </div>
-                        <div class="language-option" data-lang="yue-Hant-HK" data-flag="🇭🇰" data-name="广东话">
+                        <div class="language-option" data-lang="yue-Hant-HK" data-flag="🇭🇰" data-name="廣東話">
                             <span>🇭🇰</span>
-                            <span>广东话 (Cantonese)</span>
+                            <span>廣東話 (Cantonese)</span>
                         </div>
                     </div>
                 </div>
@@ -666,20 +666,14 @@
             // Clean up multiple spaces first
             let formatted = text.replace(/\s+/g, ' ').trim();
             
-            // Ensure space after words, but not before punctuation
-            formatted = formatted.replace(/([a-zA-Z0-9])([.!?,:;])/g, '$1$2');
-            formatted = formatted.replace(/([.!?,:;])([a-zA-Z0-9])/g, '$1 $2');
+            // Remove spaces before punctuation
+            formatted = formatted.replace(/\s+([.!?,:;])/g, '$1');
             
-            // Ensure words have spaces between them
-            formatted = formatted.replace(/([a-zA-Z0-9])([a-zA-Z])/g, '$1 $2');
+            // Ensure space after punctuation when followed by letters/numbers
+            formatted = formatted.replace(/([.!?,:;])([a-zA-Z0-9])/g, '$1 $2');
             
             // Fix any double spaces that might have been created
             formatted = formatted.replace(/\s+/g, ' ');
-            
-            // Add space at the end if the text doesn't end with punctuation
-            if (formatted && !formatted.match(/[.!?,:;]$/)) {
-                formatted += ' ';
-            }
             
             return formatted;
         }
