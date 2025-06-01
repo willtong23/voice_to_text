@@ -663,29 +663,18 @@
         function formatEnglishSpacing(text) {
             if (!text.trim()) return text;
             
-            // First, normalize the text to lowercase to fix random capitalization
-            let formatted = text.toLowerCase().trim();
+            // Clean up multiple spaces first - do NOT lowercase everything as it breaks the input
+            let formatted = text.replace(/\s+/g, ' ').trim();
             
-            // Clean up multiple spaces
-            formatted = formatted.replace(/\s+/g, ' ');
-            
-            // Remove ALL spaces before punctuation
+            // Remove spaces before punctuation
             formatted = formatted.replace(/\s+([.!?,:;])/g, '$1');
             
-            // FORCE space after ALL punctuation marks (even if there was none)
+            // Add space after punctuation if there isn't one
             formatted = formatted.replace(/([.!?,:;])([a-zA-Z0-9])/g, '$1 $2');
             
-            // Handle words that are stuck together by looking for common word boundaries
-            // This is more conservative - only separate obvious cases
-            formatted = formatted.replace(/([a-z]{2,})([a-z]{3,})/g, (match, p1, p2) => {
-                // Only separate if both parts look like real words (3+ letters each)
-                if (p1.length >= 2 && p2.length >= 3) {
-                    return p1 + ' ' + p2;
-                }
-                return match;
-            });
+            // Now apply capitalization rules while preserving word structure
             
-            // Capitalize ONLY after sentence-ending punctuation (. ! ?) - NOT after commas
+            // Capitalize first letter after sentence-ending punctuation (. ! ?) - NOT after commas
             formatted = formatted.replace(/([.!?])\s+([a-z])/g, (match, punct, letter) => {
                 return punct + ' ' + letter.toUpperCase();
             });
@@ -729,7 +718,7 @@
                 });
             });
             
-            // Fix any double spaces that might have been created
+            // Final cleanup of multiple spaces
             formatted = formatted.replace(/\s+/g, ' ');
             
             return formatted.trim();
