@@ -663,62 +663,28 @@
         function formatEnglishSpacing(text) {
             if (!text.trim()) return text;
             
-            // Clean up multiple spaces first - do NOT lowercase everything as it breaks the input
-            let formatted = text.replace(/\s+/g, ' ').trim();
+            // Very minimal processing - let speech API handle word spacing naturally
+            let formatted = text.trim();
             
-            // Remove spaces before punctuation
+            // Only fix obvious punctuation spacing issues
+            // Remove extra spaces before punctuation
             formatted = formatted.replace(/\s+([.!?,:;])/g, '$1');
             
-            // Add space after punctuation if there isn't one
-            formatted = formatted.replace(/([.!?,:;])([a-zA-Z0-9])/g, '$1 $2');
+            // Add single space after punctuation if directly followed by letter
+            formatted = formatted.replace(/([.!?,:;])([a-zA-Z])/g, '$1 $2');
             
-            // Now apply capitalization rules while preserving word structure
+            // Basic capitalization - first letter of text
+            formatted = formatted.replace(/^([a-z])/, letter => letter.toUpperCase());
             
-            // Capitalize first letter after sentence-ending punctuation (. ! ?) - NOT after commas
+            // Capitalize after sentence endings (. ! ?)
             formatted = formatted.replace(/([.!?])\s+([a-z])/g, (match, punct, letter) => {
                 return punct + ' ' + letter.toUpperCase();
             });
             
-            // Capitalize the very first letter of the text
-            formatted = formatted.replace(/^([a-z])/, (match, letter) => {
-                return letter.toUpperCase();
-            });
-            
-            // Capitalize "I" when it appears as a standalone word
+            // Capitalize standalone "I"
             formatted = formatted.replace(/\bi\b/g, 'I');
             
-            // Capitalize proper nouns (names, places, days, months)
-            const properNouns = [
-                // Common first names
-                'john', 'mary', 'james', 'patricia', 'robert', 'jennifer', 'michael', 'linda', 'william', 'elizabeth',
-                'david', 'barbara', 'richard', 'susan', 'joseph', 'jessica', 'thomas', 'sarah', 'christopher', 'karen',
-                'daniel', 'nancy', 'matthew', 'lisa', 'anthony', 'betty', 'mark', 'helen', 'donald', 'sandra',
-                'steven', 'donna', 'paul', 'carol', 'andrew', 'ruth', 'joshua', 'sharon', 'kenneth', 'michelle',
-                
-                // Days of the week
-                'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
-                
-                // Months
-                'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
-                
-                // Common places/countries
-                'america', 'china', 'england', 'france', 'germany', 'japan', 'canada', 'australia', 'india', 'brazil',
-                'london', 'paris', 'tokyo', 'beijing', 'new york', 'los angeles', 'chicago', 'houston', 'philadelphia',
-                'hong kong', 'singapore', 'sydney', 'melbourne', 'toronto', 'vancouver', 'manchester', 'liverpool',
-                
-                // Common titles
-                'mr', 'mrs', 'ms', 'dr', 'professor', 'president', 'director'
-            ];
-            
-            // Capitalize each proper noun
-            properNouns.forEach(noun => {
-                const regex = new RegExp(`\\b${noun}\\b`, 'gi');
-                formatted = formatted.replace(regex, (match) => {
-                    return match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
-                });
-            });
-            
-            // Final cleanup of multiple spaces
+            // Clean up multiple spaces
             formatted = formatted.replace(/\s+/g, ' ');
             
             return formatted.trim();
