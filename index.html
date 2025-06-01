@@ -652,7 +652,7 @@
             }
             
             // Log for debugging (remove in production)
-            if (hasChanges && currentLanguage === 'zh-CN') {
+            if (hasChanges && currentLanguage === 'zh-Hans-CN') {
                 console.log('Converted to simplified:', text, '→', convertedText);
             }
             
@@ -717,12 +717,14 @@
             
             convertedText = convertedText.replace(/\s+/g, ' ').trim();
             
-            // Apply Chinese character conversion only for Cantonese (which uses traditional)
-            if (currentLanguage === 'yue-Hant-HK') {
+            // Apply Chinese character conversion based on language
+            if (currentLanguage === 'zh-Hans-CN') {
+                // Mandarin should ALWAYS be simplified - force convert any traditional chars
+                convertedText = convertToSimplified(convertedText);
+            } else if (currentLanguage === 'yue-Hant-HK') {
                 // Cantonese uses traditional Chinese
                 convertedText = convertToTraditional(convertedText);
             }
-            // Mandarin (zh-Hans-CN) should return simplified Chinese directly from API
             
             return convertedText;
         }
