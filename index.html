@@ -663,14 +663,31 @@
         function formatEnglishSpacing(text) {
             if (!text.trim()) return text;
             
-            // Clean up multiple spaces first
-            let formatted = text.replace(/\s+/g, ' ').trim();
+            // First, normalize the text to lowercase to fix random capitalization
+            let formatted = text.toLowerCase().trim();
             
-            // Remove spaces before punctuation
+            // Clean up multiple spaces
+            formatted = formatted.replace(/\s+/g, ' ');
+            
+            // Remove ALL spaces before punctuation
             formatted = formatted.replace(/\s+([.!?,:;])/g, '$1');
             
-            // Ensure space after all punctuation marks
+            // FORCE space after ALL punctuation marks (even if there was none)
             formatted = formatted.replace(/([.!?,:;])([a-zA-Z0-9])/g, '$1 $2');
+            
+            // Handle words that are stuck together - add space before capital letters
+            // This catches cases like "helloWorld" -> "hello World"
+            formatted = formatted.replace(/([a-z])([A-Z])/g, '$1 $2');
+            
+            // Separate words that might be stuck together by looking for common patterns
+            // Add space between lowercase letter and uppercase letter
+            formatted = formatted.replace(/([a-z])([a-z][a-z]+)/g, (match, p1, p2) => {
+                // Only separate if it looks like two actual words
+                if (p2.length >= 2) {
+                    return p1 + ' ' + p2;
+                }
+                return match;
+            });
             
             // Capitalize first letter after sentence-ending punctuation (. ! ?)
             formatted = formatted.replace(/([.!?])\s+([a-z])/g, (match, punct, letter) => {
@@ -682,10 +699,13 @@
                 return letter.toUpperCase();
             });
             
+            // Capitalize "I" when it appears as a standalone word
+            formatted = formatted.replace(/\bi\b/g, 'I');
+            
             // Fix any double spaces that might have been created
             formatted = formatted.replace(/\s+/g, ' ');
             
-            return formatted;
+            return formatted.trim();
         }
 
         // Punctuation conversion mappings
