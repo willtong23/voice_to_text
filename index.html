@@ -436,6 +436,235 @@
                 margin: 10px;
             }
         }
+
+        /* iPad and Tablet Optimizations */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                max-width: 95%;
+                height: calc(100vh - 30px);
+                margin: 15px auto;
+            }
+            
+            .header {
+                padding: 2rem;
+                flex-wrap: wrap;
+                gap: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+            
+            .controls {
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            }
+            
+            .language-btn {
+                padding: 1rem 1.5rem;
+                font-size: 1.1rem;
+                min-width: 200px;
+                min-height: 50px;
+            }
+            
+            .voice-button {
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+                min-height: 50px;
+                min-width: 180px;
+            }
+            
+            .content {
+                padding: 2rem;
+                gap: 1.5rem;
+            }
+            
+            .status {
+                padding: 1rem 1.5rem;
+                font-size: 1.1rem;
+            }
+            
+            .text-size-control label {
+                font-size: 1rem !important;
+            }
+            
+            .text-size-slider {
+                width: 150px;
+                height: 6px;
+            }
+            
+            .text-size-slider::-webkit-slider-thumb {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .text-size-slider::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .text-output {
+                font-size: 20px;
+                padding: 2rem;
+                min-height: 300px;
+                line-height: 1.7;
+            }
+            
+            .action-buttons {
+                gap: 1rem;
+                justify-content: center;
+            }
+            
+            .action-btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+                min-height: 50px;
+                min-width: 120px;
+            }
+            
+            .toggle-btn {
+                padding: 0.6rem 1rem;
+                font-size: 1rem;
+                min-height: 44px;
+            }
+            
+            .punctuation-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1rem;
+            }
+            
+            .language-options {
+                min-width: 280px;
+            }
+            
+            .language-option {
+                padding: 1rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* iPad Pro and Large Tablets */
+        @media (min-width: 1025px) and (max-width: 1366px) {
+            .container {
+                max-width: 90%;
+                height: calc(100vh - 40px);
+            }
+            
+            .header {
+                padding: 2.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .logo {
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 2.5rem;
+                gap: 2rem;
+            }
+            
+            .text-output {
+                font-size: 22px;
+                padding: 2.5rem;
+                min-height: 400px;
+            }
+            
+            .punctuation-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        /* Touch-friendly improvements for all tablet sizes */
+        @media (min-width: 769px) and (max-width: 1366px) {
+            /* Ensure all clickable elements have minimum 44px touch target */
+            button, .language-option, .toggle-btn {
+                min-height: 44px;
+                cursor: pointer;
+            }
+            
+            /* Better hover states for tablets with mouse support */
+            .voice-button:hover,
+            .action-btn:hover,
+            .language-btn:hover {
+                transform: translateY(-2px);
+            }
+            
+            /* Improved focus states for accessibility */
+            button:focus,
+            textarea:focus,
+            input:focus {
+                outline: 3px solid rgba(79, 70, 229, 0.5);
+                outline-offset: 2px;
+            }
+            
+            /* Better spacing for touch interaction */
+            .action-buttons {
+                margin-top: 1rem;
+            }
+            
+            /* Optimized text controls for tablet */
+            .text-controls {
+                padding: 1rem;
+                background: #f8fafc;
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+            }
+        }
+
+        /* Landscape orientation optimizations */
+        @media (min-width: 769px) and (max-width: 1366px) and (orientation: landscape) {
+            .container {
+                height: calc(100vh - 20px);
+                margin: 10px auto;
+            }
+            
+            .header {
+                padding: 1.5rem 2rem;
+            }
+            
+            .content {
+                padding: 1.5rem 2rem;
+            }
+            
+            .text-output {
+                min-height: 250px;
+            }
+        }
+
+        /* Portrait orientation optimizations */
+        @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-left {
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+            
+            .controls {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .text-output {
+                min-height: 350px;
+            }
+        }
     </style>
 </head>
 <body>
